@@ -21,6 +21,7 @@ import com.intellij.formatting.DependentSpacingRule.Anchor
 import com.intellij.formatting.DependentSpacingRule.Trigger
 import com.intellij.lang.ASTNode
 import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiComment
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.TokenSet
@@ -70,21 +71,21 @@ class KotlinSpacingBuilder(val commonCodeStyleSettings: CommonCodeStyleSettings,
         }
 
         fun lineBreakIfLineBreakInParent(numSpacesOtherwise: Int, allowBlankLines: Boolean = true) {
-            newRule {
-                p, l, r ->
-                Spacing.createDependentLFSpacing(numSpacesOtherwise, numSpacesOtherwise, p.textRange,
+            newRule { p, _, _ ->
+            Spacing.createDependentLFSpacing(numSpacesOtherwise, numSpacesOtherwise, p.textRange,
                                                  commonCodeStyleSettings.KEEP_LINE_BREAKS,
                                                  if (allowBlankLines) commonCodeStyleSettings.KEEP_BLANK_LINES_IN_CODE else 0)
             }
         }
 
         fun emptyLinesIfLineBreakInLeft(emptyLines: Int, numberOfLineFeedsOtherwise: Int = 1, numSpacesOtherwise: Int = 0) {
-            newRule { parent: ASTBlock, left: ASTBlock, right: ASTBlock ->
+            newRule { _: ASTBlock, left: ASTBlock, _: ASTBlock ->
+                val lastChild = left.node?.psi?.lastChild
+                val leftEndsWithComment = lastChild is PsiComment && lastChild.tokenType == KtTokens.EOL_COMMENT
                 val dependentSpacingRule = DependentSpacingRule(Trigger.HAS_LINE_FEEDS).registerData(Anchor.MIN_LINE_FEEDS, emptyLines + 1)
                 spacingBuilderUtil.createLineFeedDependentSpacing(numSpacesOtherwise,
                                                                   numSpacesOtherwise,
-                                                                  numberOfLineFeedsOtherwise,
-                                                                  // if (leftEndsWithComment) Math.max(1, numberOfLineFeedsOtherwise) else numberOfLineFeedsOtherwise,
+                                                                  if (leftEndsWithComment) Math.max(1, numberOfLineFeedsOtherwise) else numberOfLineFeedsOtherwise,
                                                                   commonCodeStyleSettings.KEEP_LINE_BREAKS,
                                                                   commonCodeStyleSettings.KEEP_BLANK_LINES_IN_DECLARATIONS,
                                                                   left.textRange,
