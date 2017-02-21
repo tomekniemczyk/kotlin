@@ -36,13 +36,13 @@ class KotlinSpacingBuilder(val commonCodeStyleSettings: CommonCodeStyleSettings,
         fun getSpacing(parent: ASTBlock, left: ASTBlock, right: ASTBlock): Spacing?
     }
 
-    inner class BasicSpacingBuilder() : SpacingBuilder(commonCodeStyleSettings), Builder {
+    inner class BasicSpacingBuilder : SpacingBuilder(commonCodeStyleSettings), Builder {
         override fun getSpacing(parent: ASTBlock, left: ASTBlock, right: ASTBlock): Spacing? {
             return super.getSpacing(parent, left, right)
         }
     }
 
-    inner class CustomSpacingBuilder() : Builder {
+    inner class CustomSpacingBuilder : Builder {
         private val rules = ArrayList<(ASTBlock, ASTBlock, ASTBlock) -> Spacing?>()
         private var conditions = ArrayList<(ASTBlock, ASTBlock, ASTBlock) -> Boolean>()
 
@@ -94,7 +94,7 @@ class KotlinSpacingBuilder(val commonCodeStyleSettings: CommonCodeStyleSettings,
         }
 
         fun spacing(spacing: Spacing) {
-            newRule { parent, left, right -> spacing }
+            newRule { _, _, _ -> spacing }
         }
 
         fun customRule(block: (parent: ASTBlock, left: ASTBlock, right: ASTBlock) -> Spacing?) {
